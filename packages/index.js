@@ -1,7 +1,7 @@
 export default {
   install(Vue, opts = {}) {
     const {
-      componentName = 'EasyUpload',
+      componentName = 'PvUpload',
       listType = 'text',
       uploadText = '选取文件',
       downloadText = '模板下载',
@@ -41,7 +41,7 @@ export default {
 
     const isFunctionValue = (k, dv) => (typeof opts[k] === 'function' ? opts[k]() : opts[k] || dv)
 
-    const EasyUpload = {
+    const PvUpload = {
       name: componentName,
       model: {
         prop: 'fileList',
@@ -246,6 +246,6 @@ export default {
             )
       }
     }
-    Vue.component(EasyUpload.name, EasyUpload)
+    Vue.component(PvUpload.name, PvUpload)
   }
 }

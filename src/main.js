@@ -2,9 +2,9 @@ import Vue from 'vue'
 import ElementUi from 'element-ui'
 import App from './App'
 import 'element-ui/lib/theme-chalk/index.css'
-import EasyUpload from '/packages/index'
+import PvUpload from '/packages/index'
 
-Vue.use(ElementUi, { size: 'small' }).use(EasyUpload, {
+Vue.use(ElementUi, { size: 'small' }).use(PvUpload, {
   drag: true,
   theme: '#010B12',
   action: '/api/blade-resource/oss/endpoint/put-file-attach',

@@ -25,11 +25,11 @@ package-lock.json
 jsdoc.config.json
 
 dist/demo.html
-dist/easy-upload.common.js
-dist/easy-upload.common.1.js
-dist/easy-upload.common.2.js
-dist/easy-upload.umd.js
-dist/easy-upload.umd.1.js
-dist/easy-upload.umd.2.js
-dist/easy-upload.umd.min.1.js
-dist/easy-upload.umd.min.2.js
+dist/pv-upload.common.js
+dist/pv-upload.common.1.js
+dist/pv-upload.common.2.js
+dist/pv-upload.umd.js
+dist/pv-upload.umd.1.js
+dist/pv-upload.umd.2.js
+dist/pv-upload.umd.min.1.js
+dist/pv-upload.umd.min.2.js
