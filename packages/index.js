@@ -226,7 +226,7 @@ export default {
                 (drag
                   ? DragUploadTrigger
                   : downloadUuid
-                  ? [NormalUploadTrigger, NormalDownloadTrigger, UploadTipElement]
+                  ? [NormalDownloadTrigger, NormalUploadTrigger, UploadTipElement]
                   : [NormalUploadTrigger, UploadTipElement]),
             UploadStyle
           ]
