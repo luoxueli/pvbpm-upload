@@ -59,7 +59,7 @@ export default {
         templateParams: { type: Object, default: () => templateParams },
         data: { type: Object, default: () => data },
         headers: { type: Object, default: () => headers },
-        fileList: { type: Array, required: false, default: () => [] },
+        fileList: { type: Array, required: false, default: () => [], validator: v => Array.isArray(v) },
         limit: { type: Number, default: limit, validator: v => v > 0 },
         size: { type: Number, default: size, validator: v => v > 0 },
         withCredentials: { type: Boolean, default: withCredentials },
@@ -101,6 +101,7 @@ export default {
         }
       },
       render(h) {
+        console.log(this)
         const {
           viewWithCount,
           fileList,
@@ -131,7 +132,7 @@ export default {
           `且不超过${size}MB`
         ]
         const isTextView = listType === 'text'
-        const textViewUploadStyle = `.el-upload {display: block;}.el-upload-list__item:first-child{margin-top: 0;}`
+        const textViewUploadStyle = `.el-upload-list__item:first-child{margin-top: 0;}`
         const themeClass = theme ? `.color-theme { color: ${theme};}` : ''
         const dragUploadStyle = `
           ${themeClass}
@@ -148,7 +149,7 @@ export default {
           .el-upload-dragger .el-icon-folder-opened { opacity: 0; transform: translateX(100%); }
           .el-upload-dragger.is-dragover .el-icon-folder{ opacity: 0; transform: translateX(-100%); }
           .el-upload-dragger.is-dragover .el-icon-folder-opened{ opacity: 1; transform: translateX(0) scale(1.1); }
-          ${disabled && '.el-upload {display: none}'}
+          ${disabled && `div.disabled[data-uid="${this._uid}"] .el-upload{display: none}`}
         `
 
         const UploadStyle = h('style', [isTextView && disabled && textViewUploadStyle, dragUploadStyle].join(' '))
@@ -204,6 +205,8 @@ export default {
           'el-upload',
           {
             ref: 'uploader',
+            attrs: { 'data-uid': this._uid },
+            class: { disabled },
             props: {
               ...this.$props,
               beforeUpload: file => (beforeUpload ? beforeUpload(file, this) : true),
@@ -232,9 +235,8 @@ export default {
           ]
         )
 
-        return !viewWithCount
-          ? Uploader
-          : h(
+        return viewWithCount
+          ? h(
               'el-popover',
               {
                 scopedSlots: {
@@ -244,6 +246,7 @@ export default {
               },
               [Uploader]
             )
+          : Uploader
       }
     }
     Vue.component(PvUpload.name, PvUpload)
