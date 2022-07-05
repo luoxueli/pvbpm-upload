@@ -101,7 +101,6 @@ export default {
         }
       },
       render(h) {
-        console.log(this)
         const {
           viewWithCount,
           fileList,
