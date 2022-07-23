@@ -10,7 +10,7 @@ export default {
       name = 'file',
       templateURL,
       data = {},
-      headers = {},
+      headers = () => ({}),
       templateParams = {},
       limit = 20,
       size = 50,
@@ -58,7 +58,7 @@ export default {
         theme: { type: String, default: theme },
         templateParams: { type: Object, default: () => templateParams },
         data: { type: Object, default: () => data },
-        headers: { type: Object, default: () => headers },
+        headers: { type: Function, default: headers },
         fileList: { type: Array, required: false, default: () => [], validator: v => Array.isArray(v) },
         limit: { type: Number, default: limit, validator: v => v > 0 },
         size: { type: Number, default: size, validator: v => v > 0 },
@@ -120,6 +120,7 @@ export default {
           onSuccess,
           onRemove,
           theme,
+          headers,
           beforeUpload
         } = this
 
@@ -218,7 +219,8 @@ export default {
                 fileList = fileList.map(({ response = {}, ...rest }) => ({ ...rest, ...response.data }))
                 this.$emit('change', fileList)
                 onRemove && onRemove(file, fileList)
-              }
+              },
+              headers: headers ? (typeof headers === 'function' ? headers(this) : headers) : {}
             }
           },
           [
