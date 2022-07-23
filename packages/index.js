@@ -8,7 +8,6 @@ export default {
       downloadUuid,
       action,
       name = 'file',
-      templateURL,
       data = {},
       headers = () => ({}),
       templateParams = {},
@@ -32,11 +31,9 @@ export default {
       httpRequest,
       beforeRemove,
       onPreview,
-      theme,
       onTemplateDownload,
       onDownload,
-      onRemove,
-      renderPopoverReference = (h, t) => h('el-link', t)
+      onRemove
     } = opts
 
     const isFunctionValue = (k, dv) => (typeof opts[k] === 'function' ? opts[k]() : opts[k] || dv)
@@ -54,11 +51,9 @@ export default {
         downloadUuid: { type: String, default: downloadUuid },
         action: { type: String, required: !action, default: action },
         name: { type: String, default: name },
-        templateURL: { type: String, default: templateURL },
-        theme: { type: String, default: theme },
         templateParams: { type: Object, default: () => templateParams },
         data: { type: Object, default: () => data },
-        headers: { type: Function, default: headers },
+        headers: { type: [Function, Object], default: typeof headers === 'function' ? headers : () => headers },
         fileList: { type: Array, required: false, default: () => [], validator: v => Array.isArray(v) },
         limit: { type: Number, default: limit, validator: v => v > 0 },
         size: { type: Number, default: size, validator: v => v > 0 },
@@ -84,7 +79,6 @@ export default {
           type: Function,
           default: generateUuid ? generateUuid : () => `${+new Date()}`
         },
-        renderPopoverReference: { type: Function, default: renderPopoverReference },
         onTemplateDownload: { type: Function, default: onTemplateDownload },
         onDownload: { type: Function, default: onDownload },
         onRemove: { type: Function, default: onRemove }
@@ -112,95 +106,23 @@ export default {
           uploadText,
           downloadText,
           downloadUuid,
-          listType,
-          templateURL,
-          onTemplateDownload,
           onDownload,
-          templateParams,
           onSuccess,
           onRemove,
-          theme,
           headers,
           beforeUpload
         } = this
 
-        const defaultChildren = this.$slots.default
-        const tip = this.$slots.tip
-        const uploadTipText = tip || [
-          accept && `只能上传${accept}文件，`,
-          limit > 0 && `最多上传${limit}个，`,
-          `且不超过${size}MB`
-        ]
-        const isTextView = listType === 'text'
-        const textViewUploadStyle = `.el-upload-list__item:first-child{margin-top: 0;}`
-        const themeClass = theme ? `.color-theme { color: ${theme};}` : ''
-        const dragUploadStyle = `
-          ${themeClass}
-          .el-upload-dragger { 
-            display: flex;flex-direction: column;align-items: center;
-            justify-content: space-around;background: #f5f7fd;
-            border: 2px dashed ${theme || '#d9d9d9'}; 
-          }
-          .el-upload-dragger:hover {border: 2px dashed ${theme || '#d9d9d9'}; }
-          .el-upload-dragger .el-icon-upload { margin-top: 20px }
-          .el-upload-dragger .drag-icon { font-size: 40px;transition: all ease-in-out 0.3s;position: absolute;left: 0;top: 0; }
-          .el-upload__icon { position: relative;width: 40px;height: 40px; }
-          .el-upload__buttons { width: 85%; font-size: 14px }
-          .el-upload-dragger .el-icon-folder-opened { opacity: 0; transform: translateX(100%); }
-          .el-upload-dragger.is-dragover .el-icon-folder{ opacity: 0; transform: translateX(-100%); }
-          .el-upload-dragger.is-dragover .el-icon-folder-opened{ opacity: 1; transform: translateX(0) scale(1.1); }
-          ${disabled && `div.disabled[data-uid="${this._uid}"] .el-upload{display: none}`}
-        `
-
-        const UploadStyle = h('style', [isTextView && disabled && textViewUploadStyle, dragUploadStyle].join(' '))
-        const UploadTipElement = h('div', { class: 'el-upload__tip', slot: 'tip' }, uploadTipText)
-        const NormalUploadTrigger = h('el-button', { slot: 'trigger', props: { type: 'primary' } }, uploadText)
-
-        const DragUploadTrigger = [
-          h('div', { class: 'el-upload__icon' }, [
-            h('i', { class: 'el-icon-folder drag-icon color-theme' }),
-            h('i', { class: 'el-icon-folder-opened drag-icon color-theme' })
-          ]),
-          h('div', { class: 'el-upload__text' }, [
-            '将文件拖到这里开始上传',
-            !templateURL && '或',
-            !templateURL && h('span', { class: 'color-theme' }, '点击上传'),
-            UploadTipElement
-          ]),
-          templateURL &&
-            h('el-row', { class: 'el-upload__buttons', props: { type: 'flex', justify: 'space-between' } }, [
-              h('span', { class: 'color-theme' }, '点击上传'),
-              h(
-                'span',
-                {
-                  class: 'color-theme',
-                  on: {
-                    click: e => {
-                      e.stopPropagation()
-                      onTemplateDownload
-                        ? onTemplateDownload(templateURL, templateParams)
-                        : window.open(templateURL + `?${templateParams}`, '_blank')
-                    }
-                  }
-                },
-                '下载模板'
-              )
-            ])
-        ]
-        const NormalDownloadTrigger = h(
-          'el-button',
-          {
-            style: 'margin-left:10px',
-            props: { type: 'success' },
-            on: {
-              click: e => {
-                e.stopPropagation()
-                onDownload(downloadUuid)
-              }
-            }
-          },
-          downloadText
+        const UploadTipElement = h(
+          'div',
+          { class: 'el-upload__tip', slot: 'tip' },
+          this.$slots.tip || [
+            accept && `只能上传${accept}文件，`,
+            limit > 0 && `最多上传${limit}个，`,
+            `且不超过${size}MB`
+          ]
         )
+
         const Uploader = h(
           'el-upload',
           {
@@ -210,6 +132,7 @@ export default {
             props: {
               ...this.$props,
               beforeUpload: file => (beforeUpload ? beforeUpload(file, this) : true),
+              headers: headers ? (typeof headers === 'function' ? headers(this) : headers) : {},
               onSuccess: (response, file, fileList) => {
                 fileList = fileList.map(({ response = {}, ...rest }) => ({ ...rest, ...response.data }))
                 this.$emit('change', fileList)
@@ -219,35 +142,37 @@ export default {
                 fileList = fileList.map(({ response = {}, ...rest }) => ({ ...rest, ...response.data }))
                 this.$emit('change', fileList)
                 onRemove && onRemove(file, fileList)
-              },
-              headers: headers ? (typeof headers === 'function' ? headers(this) : headers) : {}
+              }
             }
           },
           [
-            disabled
-              ? ''
-              : defaultChildren ||
-                (drag
-                  ? DragUploadTrigger
-                  : downloadUuid
-                  ? [NormalDownloadTrigger, NormalUploadTrigger, UploadTipElement]
-                  : [NormalUploadTrigger, UploadTipElement]),
-            UploadStyle
+            this.$slots.default ||
+              (drag
+                ? h('div', { class: 'el-upload__text', style: { 'line-height': '180px' } }, ['将文件拖到这里开始上传'])
+                : [
+                    downloadUuid &&
+                      h(
+                        'el-button',
+                        {
+                          style: 'margin-left:10px',
+                          props: { type: 'success' },
+                          on: { click: () => onDownload && onDownload(downloadUuid) }
+                        },
+                        downloadText
+                      ),
+                    h('el-button', { slot: 'trigger', props: { type: 'primary' } }, uploadText)
+                  ])
           ]
         )
 
+        if (disabled && !fileList.length) return h('span', '暂无附件')
+
         return viewWithCount
-          ? h(
-              'el-popover',
-              {
-                scopedSlots: {
-                  reference: () =>
-                    renderPopoverReference(h, fileList.length > 0 ? `${fileList.length}个附件` : '暂无附件')
-                }
-              },
-              [Uploader]
-            )
-          : Uploader
+          ? h('el-popover', { scopedSlots: { reference: () => h('el-link', `${fileList.length}个附件`) } }, [
+              Uploader,
+              UploadTipElement
+            ])
+          : h('div', [Uploader, UploadTipElement])
       }
     }
     Vue.component(PvUpload.name, PvUpload)
