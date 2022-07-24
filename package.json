@@ -1,6 +1,6 @@
 {
   "name": "@pvbpm/pv-upload",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "pv-upload",
   "private": false,
   "main": "./dist/pv-upload.umd.min.js",
