@@ -160,7 +160,7 @@ export default {
                         },
                         downloadText
                       ),
-                    h('el-button', { slot: 'trigger', props: { type: 'primary' } }, uploadText)
+                    !disabled && h('el-button', { slot: 'trigger', props: { type: 'primary' } }, uploadText)
                   ])
           ]
         )
