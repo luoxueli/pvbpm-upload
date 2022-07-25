@@ -1,6 +1,7 @@
 export default {
   install(Vue, opts = {}) {
     const {
+      disabledClassName = 'pv-upload__disabled',
       componentName = 'PvUpload',
       listType = 'text',
       uploadText = '选取文件',
@@ -45,6 +46,7 @@ export default {
       },
       props: {
         listType: { type: String, default: listType },
+        disabledClassName: { type: String, default: disabledClassName },
         uploadText: { type: String, default: uploadText },
         downloadText: { type: String, default: downloadText },
         downloadUuid: { type: String, default: downloadUuid },
@@ -90,15 +92,13 @@ export default {
         }
       },
       mounted() {
-        this.$nextTick(() => {
-          if (this.disabled) {
-            const el = document.querySelector(`.pv-upload__${this._uid}`)
-            el.querySelector('.el-upload') && el.querySelector('.el-upload').remove()
-            if (this.fileList.length === 1) {
-              el.querySelector('.el-upload-list__item').style.marginTop = '5px'
-            }
-          }
-        })
+        if (!this.disabled) return
+        setTimeout(() => {
+          const wrapper = document.querySelector(`.pv-upload__${this._uid}`)
+          if (!wrapper) return
+          wrapper.querySelector('.el-upload') && wrapper.querySelector('.el-upload').remove()
+          this.fileList.length === 1 && (wrapper.querySelector('.el-upload-list__item').style.marginTop = '5px')
+        }, 10)
       },
       render(h) {
         const {
@@ -116,6 +116,7 @@ export default {
           onSuccess,
           onRemove,
           headers,
+          disabledClassName,
           beforeUpload
         } = this
 
@@ -161,7 +162,7 @@ export default {
             'el-upload',
             {
               ref: 'uploader',
-              class: { [`pv-upload__${this._uid}`]: disabled },
+              class: { [`pv-upload__${this._uid}`]: disabled, [disabledClassName]: disabled },
               props: {
                 ...this.$props,
                 beforeUpload: file => (beforeUpload ? beforeUpload(file, this) : true),
