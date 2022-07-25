@@ -21,7 +21,6 @@ export default {
       showFileList = true,
       accept,
       onStart,
-      generateUuid,
       onProgress,
       onSuccess,
       onError,
@@ -75,10 +74,6 @@ export default {
         httpRequest: { type: Function, default: httpRequest },
         beforeRemove: { type: Function, default: beforeRemove },
         onPreview: { type: Function, default: onPreview },
-        generateUuid: {
-          type: Function,
-          default: generateUuid ? generateUuid : () => `${+new Date()}`
-        },
         onTemplateDownload: { type: Function, default: onTemplateDownload },
         onDownload: { type: Function, default: onDownload },
         onRemove: { type: Function, default: onRemove }
@@ -92,6 +87,18 @@ export default {
         },
         submit() {
           this.$refs.uploader.submit()
+        }
+      },
+      mounted() {
+        const { disabled, fileList, $refs } = this
+        const filesLen = fileList.length
+        if (disabled && filesLen) {
+          const el = $refs.uploader.$el
+          el.querySelector('.el-upload') && el.querySelector('.el-upload').remove()
+
+          if (filesLen === 1) {
+            el.querySelector('.el-upload-list__item').style.marginTop = '5px'
+          }
         }
       },
       render(h) {
@@ -113,66 +120,79 @@ export default {
           beforeUpload
         } = this
 
-        const UploadTipElement = h(
-          'div',
-          { class: 'el-upload__tip', slot: 'tip' },
-          this.$slots.tip || [
-            accept && `只能上传${accept}文件，`,
-            limit > 0 && `最多上传${limit}个，`,
-            `且不超过${size}MB`
-          ]
-        )
-
-        const Uploader = h(
-          'el-upload',
-          {
-            ref: 'uploader',
-            attrs: { 'data-uid': this._uid },
-            class: { disabled },
-            props: {
-              ...this.$props,
-              beforeUpload: file => (beforeUpload ? beforeUpload(file, this) : true),
-              headers: headers ? (typeof headers === 'function' ? headers(this) : headers) : {},
-              onSuccess: (response, file, fileList) => {
-                fileList = fileList.map(({ response = {}, ...rest }) => ({ ...rest, ...response.data }))
-                this.$emit('change', fileList)
-                onSuccess && onSuccess(response, file, fileList)
-              },
-              onRemove: (file, fileList) => {
-                fileList = fileList.map(({ response = {}, ...rest }) => ({ ...rest, ...response.data }))
-                this.$emit('change', fileList)
-                onRemove && onRemove(file, fileList)
-              }
-            }
-          },
-          [
-            this.$slots.default ||
-              (drag
-                ? h('div', { class: 'el-upload__text', style: { 'line-height': '180px' } }, ['将文件拖到这里开始上传'])
-                : [
-                    downloadUuid &&
-                      h(
-                        'el-button',
-                        {
-                          style: 'margin-left:10px',
-                          props: { type: 'success' },
-                          on: { click: () => onDownload && onDownload(downloadUuid) }
-                        },
-                        downloadText
-                      ),
-                    !disabled && h('el-button', { slot: 'trigger', props: { type: 'primary' } }, uploadText)
-                  ])
-          ]
-        )
-
         if (disabled && !fileList.length) return h('span', '暂无附件')
+
+        const renderUploadTipElement = () => {
+          if (disabled) return null
+          return h(
+            'div',
+            { class: 'el-upload__tip', slot: 'tip' },
+            this.$slots.tip || [
+              accept && `只能上传${accept}文件，`,
+              limit > 0 && `最多上传${limit}个，`,
+              `且不超过${size}MB`
+            ]
+          )
+        }
+
+        const renderDownloadTemplate = () => {
+          if (!downloadUuid) return null
+          return h(
+            'el-button',
+            {
+              style: 'margin-left:10px',
+              props: { type: 'success' },
+              on: { click: () => onDownload && onDownload(downloadUuid) }
+            },
+            downloadText
+          )
+        }
+
+        const renderUploadTriggerButton = () => {
+          if (disabled) return null
+          return h('el-button', { slot: 'trigger', props: { type: 'primary' } }, uploadText)
+        }
+
+        const renderDragTipElement = () => {
+          return h('div', { class: 'el-upload__text', style: { 'line-height': '180px' } }, ['将文件拖到这里开始上传'])
+        }
+
+        const renderUploader = () => {
+          return h(
+            'el-upload',
+            {
+              ref: 'uploader',
+              props: {
+                ...this.$props,
+                beforeUpload: file => (beforeUpload ? beforeUpload(file, this) : true),
+                headers: headers ? (typeof headers === 'function' ? headers(this) : headers) : {},
+                onSuccess: (response, file, fileList) => {
+                  fileList = fileList.map(({ response = {}, ...rest }) => ({ ...rest, ...response.data }))
+                  this.$emit('change', fileList)
+                  onSuccess && onSuccess(response, file, fileList)
+                },
+                onRemove: (file, fileList) => {
+                  fileList = fileList.map(({ response = {}, ...rest }) => ({ ...rest, ...response.data }))
+                  this.$emit('change', fileList)
+                  onRemove && onRemove(file, fileList)
+                }
+              }
+            },
+            [
+              this.$slots.default ||
+                (drag ? renderDragTipElement() : [renderDownloadTemplate(), renderUploadTriggerButton()])
+            ]
+          )
+        }
 
         return viewWithCount
           ? h('el-popover', { scopedSlots: { reference: () => h('el-link', `${fileList.length}个附件`) } }, [
-              Uploader,
-              UploadTipElement
+              renderUploader(),
+              renderUploadTipElement()
             ])
-          : h('div', [Uploader, UploadTipElement])
+          : disabled
+          ? renderUploader()
+          : h('div', [renderUploader(), renderUploadTipElement()])
       }
     }
     Vue.component(PvUpload.name, PvUpload)
