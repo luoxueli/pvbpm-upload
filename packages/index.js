@@ -90,16 +90,15 @@ export default {
         }
       },
       mounted() {
-        const { disabled, fileList, $refs } = this
-        const filesLen = fileList.length
-        if (disabled && filesLen) {
-          const el = $refs.uploader.$el
-          el.querySelector('.el-upload') && el.querySelector('.el-upload').remove()
-
-          if (filesLen === 1) {
-            el.querySelector('.el-upload-list__item').style.marginTop = '5px'
+        this.$nextTick(() => {
+          if (this.disabled) {
+            const el = this.$refs.uploader.$el
+            el.querySelector('.el-upload') && el.querySelector('.el-upload').remove()
+            if (this.fileList.length === 1) {
+              el.querySelector('.el-upload-list__item').style.marginTop = '5px'
+            }
           }
-        }
+        })
       },
       render(h) {
         const {
