@@ -92,7 +92,7 @@ export default {
       mounted() {
         this.$nextTick(() => {
           if (this.disabled) {
-            const el = this.$refs.uploader.$el
+            const el = document.querySelector(`.pv-upload__${this._uid}`)
             el.querySelector('.el-upload') && el.querySelector('.el-upload').remove()
             if (this.fileList.length === 1) {
               el.querySelector('.el-upload-list__item').style.marginTop = '5px'
@@ -161,6 +161,7 @@ export default {
             'el-upload',
             {
               ref: 'uploader',
+              class: { [`pv-upload__${this._uid}`]: disabled },
               props: {
                 ...this.$props,
                 beforeUpload: file => (beforeUpload ? beforeUpload(file, this) : true),
